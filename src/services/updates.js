@@ -11,5 +11,5 @@ export function registerServiceWorker({ onUpdateReady }) {
   navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' }).then((reg) => {
     reg.update().catch(() => {});
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
-  }).catch((err) => console.warn('CRICKET1 service worker not registered', err));
+  }).catch((err) => console.warn('ScoreX service worker not registered', err));
 }

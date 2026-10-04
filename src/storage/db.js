@@ -1,4 +1,4 @@
-/** IndexedDB access for CRICKET1. One shared connection; records are plain JSON (see serializeMatch). */
+/** IndexedDB access for ScoreX. One shared connection; records are plain JSON (see serializeMatch). */
 const DB_NAME = 'cricket1-db';
 const DB_VERSION = 1;
 const MATCH_STORE = 'matches';
@@ -20,7 +20,7 @@ function openDb() {
       resolve(db);
     };
     req.onerror = () => { dbPromise = null; reject(req.error); };
-    req.onblocked = () => { dbPromise = null; reject(new Error('Storage is blocked by another tab. Close other CRICKET1 tabs.')); };
+    req.onblocked = () => { dbPromise = null; reject(new Error('Storage is blocked by another tab. Close other ScoreX tabs.')); };
   });
   return dbPromise;
 }

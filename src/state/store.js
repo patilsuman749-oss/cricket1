@@ -9,7 +9,9 @@ export const state = {
   match: null,            // the match currently open in Live / Scorecard
   setup: createSetupState(),
   scorecardMatchId: null,
-  updateReady: false
+  updateReady: false,
+  authUser: null,
+  cloudSyncStatus: 'idle'
 };
 
 export function upsertMatch(match) {

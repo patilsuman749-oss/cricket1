@@ -1,4 +1,4 @@
-/* CRICKET1 service worker.
+/* ScoreX service worker.
  *
  * Strategy (this is what ends the "old code keeps showing up" problem):
  *   - Cache name comes from version.js  →  bumping the version creates a new cache and the
@@ -10,8 +10,8 @@
  *     so an updated worker takes over immediately; the page then shows a "Reload" banner.
  */
 importScripts('./version.js');
-const VERSION = self.CRICKET1_VERSION || 'dev';
-const CACHE = `cricket1-${VERSION}`;
+const VERSION = self.CRICKET1_VERSION || self.SCOREX_VERSION || 'dev';
+const CACHE = `scorex-${VERSION}`;
 const CORE = [
   './', './index.html', './version.js', './manifest.webmanifest',
   './src/styles/app.css', './src/app.js',
@@ -22,9 +22,10 @@ const CORE = [
   './src/statistics/aggregate.js',
   './src/storage/db.js', './src/storage/saveQueue.js',
   './src/services/feedback.js', './src/services/share.js', './src/services/theme.js', './src/services/updates.js',
+  './src/services/firebase.js', './src/services/auth.js', './src/services/cloud.js',
   './src/pages/setup-validation.js', './src/pages/setup.js', './src/pages/home.js', './src/pages/live.js', './src/pages/live-modals.js',
   './src/pages/history.js', './src/pages/players.js', './src/pages/stats.js', './src/pages/settings.js', './src/pages/scorecard.js', './src/pages/result.js',
-  './assets/icons/favicon.svg', './assets/icons/icon-192.svg', './assets/icons/icon-512.svg'
+  './assets/icons/scorex-mark.png', './assets/icons/scorex-icon-192.png', './assets/icons/scorex-icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -71,7 +72,7 @@ self.addEventListener('fetch', (event) => {
       } catch {
         const cached = await matchApp(request, url);
         if (cached) return cached;
-        return new Response('CRICKET1 is offline and this file was not cached yet.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+        return new Response('ScoreX is offline and this file was not cached yet.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
       }
     })());
     return;

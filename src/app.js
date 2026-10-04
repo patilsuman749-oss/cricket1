@@ -1,8 +1,9 @@
 /**
- * CRICKET1 application shell: boot, routing, and ONE set of delegated event listeners
+ * ScoreX application shell: boot, routing, and ONE set of delegated event listeners
  * (registered exactly once in `installListeners`). Every control maps to exactly one handler below.
  */
 import { signInWithGoogle, logout, watchAuth } from './services/auth.js';
+import { saveMatchToCloud, syncLocalWithCloud, deleteMatchFromCloud } from './services/cloud.js';
 import { icon } from './components/icons.js';
 import { $, escapeHtml } from './utils/helpers.js';
 import { state, upsertMatch, activeMatches } from './state/store.js';
@@ -54,6 +55,30 @@ async function boot() {
     render();
   }
 
+  // Firebase auth state is restored by the browser. Once local storage is ready, merge
+  // this device with the signed-in user's Firestore matches.
+  watchAuth(async (user) => {
+    state.authUser = user || null;
+    state.cloudSyncStatus = user ? 'syncing' : 'idle';
+    render();
+
+    if (!user) return;
+
+    try {
+      const result = await syncLocalWithCloud(state.matches);
+      if (result?.matches) {
+        state.matches = result.matches;
+        if (state.match) state.match = state.matches.find((m) => m.matchId === state.match.matchId) || state.match;
+      }
+      state.cloudSyncStatus = 'synced';
+      render();
+    } catch (error) {
+      console.error('ScoreX cloud sync failed', error);
+      state.cloudSyncStatus = 'error';
+      render();
+    }
+  });
+
   registerServiceWorker({ onUpdateReady: showUpdateBanner });
 }
 
@@ -70,7 +95,7 @@ function renderTopbar() {
   const dark = getTheme() === 'dark';
   const showBack = ['new-match', 'scorecard'].includes(state.view);
   $('#topbar').innerHTML = `${showBack ? `<button type="button" class="icon-btn" data-action="back" aria-label="Back">${icon('back')}</button>` : ''}
-    <div class="brand"><img class="brand-mark" src="assets/icons/favicon.svg" alt=""><div class="brand-text"><div class="brand-name">CRICKET1</div><span class="brand-tag">${escapeHtml(viewTitle())} · Every Ball. Every Run. Every Moment.</span></div></div>
+    <div class="brand"><img class="brand-mark" src="assets/icons/scorex-mark.png" alt="ScoreX logo"><div class="brand-text"><div class="brand-name">ScoreX</div><span class="brand-tag">${escapeHtml(viewTitle())} · Every Ball. Every Run. Every Moment.</span></div></div>
     <div class="topbar-spacer"></div>
     <div class="desktop-nav">${NAV.map(([id, label, ic]) => navButton(id, label, ic, 17)).join('')}</div>
     <div class="topbar-actions"><button type="button" class="icon-btn theme-toggle" data-action="theme" aria-label="Switch to ${dark ? 'light' : 'dark'} theme" aria-pressed="${dark}">${icon(dark ? 'sun' : 'moon', 18)}</button></div>`;
@@ -81,8 +106,8 @@ function renderBottomNav() { $('#bottom-nav').innerHTML = NAV.map(([id, label, i
 function renderMain() {
   const root = $('#main-content');
   document.body.dataset.view = state.view;
-  if (state.loading) { root.innerHTML = '<div class="empty"><strong>Loading CRICKET1…</strong><span class="small">Restoring your locally saved matches.</span></div>'; return; }
-  if (state.storageError) { root.innerHTML = `<div class="card"><h2>Storage unavailable</h2><p class="subtle">CRICKET1 could not open local browser storage, so matches cannot be saved. Allow site storage (or leave private browsing) and reload.</p></div>`; return; }
+  if (state.loading) { root.innerHTML = '<div class="empty"><strong>Loading ScoreX…</strong><span class="small">Restoring your locally saved matches.</span></div>'; return; }
+  if (state.storageError) { root.innerHTML = `<div class="card"><h2>Storage unavailable</h2><p class="subtle">ScoreX could not open local browser storage, so matches cannot be saved. Allow site storage (or leave private browsing) and reload.</p></div>`; return; }
   switch (state.view) {
     case 'new-match': root.innerHTML = renderSetup(); break;
     case 'live': renderLiveView(root); break;
@@ -109,7 +134,7 @@ function showUpdateBanner() {
   const el = $('#update-banner');
   if (!el) return;
   el.hidden = false;
-  el.innerHTML = `<span>A new version of CRICKET1 is ready.</span><button type="button" class="primary-btn" data-action="reload-app">Reload</button>`;
+  el.innerHTML = `<span>A new version of ScoreX is ready.</span><button type="button" class="primary-btn" data-action="reload-app">Reload</button>`;
 }
 
 /* ============================================================== navigation */
@@ -222,6 +247,7 @@ async function startMatch() {
   catch (e) { toast(e.message, 'error'); return; }
   state.match = match; upsertMatch(match);
   try { await putRecord(Engine.serializeMatch(match)); } catch { toast('Could not save the new match to this device.', 'error'); }
+  void saveMatchToCloud(match).catch((e) => console.warn('ScoreX cloud sync failed', e));
   state.view = 'live'; render(); window.scrollTo({ top: 0 });
   Modals.openOpenersModal(match);
 }
@@ -239,7 +265,7 @@ const actions = {
   'sign-in': async () => {
   try {
     await signInWithGoogle();
-    toast('Signed in with Google.', 'success');
+    toast('Signed in to ScoreX with Google.', 'success');
     render();
   } catch (e) {
     console.error(e);
@@ -250,7 +276,7 @@ const actions = {
 'sign-out': async () => {
   try {
     await logout();
-    toast('Signed out.', 'success');
+    toast('Signed out of ScoreX.', 'success');
     render();
   } catch (e) {
     console.error(e);
@@ -329,14 +355,15 @@ const actions = {
     const id = btn.dataset.id;
     if (!confirm('Delete this saved match from this device?')) return;
     await deleteMatch(id);
+    void deleteMatchFromCloud(id).catch((e) => toast('Deleted locally, but cloud deletion failed. Please sync again when online.', 'warning'));
     state.matches = state.matches.filter((m) => m.matchId !== id);
     if (state.match?.matchId === id) state.match = null;
     render(); toast('Match deleted.', 'success');
   },
-  export: async () => { await flushNow(); downloadJson({ app: 'CRICKET1', schemaVersion: Engine.SCHEMA_VERSION, exportedAt: new Date().toISOString(), matches: state.matches.map(Engine.serializeMatch) }); toast('Backup exported.', 'success'); },
+  export: async () => { await flushNow(); downloadJson({ app: 'ScoreX', schemaVersion: Engine.SCHEMA_VERSION, exportedAt: new Date().toISOString(), matches: state.matches.map(Engine.serializeMatch) }); toast('Backup exported.', 'success'); },
   import: () => $('#import-file').click(),
   'clear-data': async () => {
-    if (!confirm('Delete ALL CRICKET1 matches from this device? Export a backup first if you need one.')) return;
+    if (!confirm('Delete ALL ScoreX matches from this device? Export a backup first if you need one.')) return;
     await clearMatches(); state.matches = []; state.match = null; render(); toast('Local data cleared.', 'success');
   },
   'close-modal': () => closeModal(),
@@ -347,12 +374,19 @@ async function importFile(file) {
   try {
     const data = JSON.parse(await file.text());
     const list = Array.isArray(data) ? data : data?.matches;
-    if (!Array.isArray(list)) throw new Error('This file does not contain CRICKET1 matches.');
+    if (!Array.isArray(list)) throw new Error('This file does not contain ScoreX matches.');
     const good = [];
     for (const raw of list) { try { good.push(Engine.hydrateMatch(structuredClone(raw))); } catch { /* counted below */ } }
     if (!good.length) throw new Error('No valid matches found in this file.');
     await putRecords(good.map(Engine.serializeMatch));
     good.forEach(upsertMatch);
+    void syncLocalWithCloud(state.matches).then((r) => {
+      if (r?.matches) {
+        state.matches = r.matches;
+        if (state.match) state.match = state.matches.find((m) => m.matchId === state.match.matchId) || state.match;
+      }
+      if (state.view === 'settings') renderMain();
+    }).catch((e) => console.warn('ScoreX cloud import sync failed', e));
     if (state.view === 'settings') renderMain();
     toast(`${good.length} match${good.length === 1 ? '' : 'es'} imported${good.length < list.length ? `, ${list.length - good.length} skipped` : ''}.`, 'success');
   } catch (e) { toast(`Import failed: ${e.message}`, 'error'); }

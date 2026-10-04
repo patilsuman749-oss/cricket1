@@ -1,4 +1,4 @@
-# CRICKET1
+# ScoreX
 
 **Every Ball. Every Run. Every Moment.**
 

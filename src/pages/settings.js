@@ -2,6 +2,7 @@ import { icon } from '../components/icons.js';
 import { pageHead } from '../components/ui.js';
 import { getTheme } from '../services/theme.js';
 import { auth } from '../services/firebase.js';
+import { state } from '../state/store.js';
 
 const flag = (key) => {
   try {
@@ -15,7 +16,8 @@ const version = () => globalThis.CRICKET1_VERSION || 'dev';
 
 export function renderSettings() {
   const theme = getTheme();
-  const user = auth.currentUser;
+  const user = state.authUser || auth.currentUser;
+  const syncStatus = state.cloudSyncStatus;
 
   const toggle = (id, label, on) =>
     `<label class="live-row setting-row" for="${id}">
@@ -106,7 +108,7 @@ export function renderSettings() {
         </div>
 
         <span class="chip">
-          ${user ? 'Signed In' : 'Guest'}
+          ${user ? (syncStatus === 'syncing' ? 'Syncing…' : syncStatus === 'error' ? 'Sync error' : 'Synced') : 'Guest'}
         </span>
       </div>
 
@@ -133,7 +135,7 @@ export function renderSettings() {
       <div class="small" style="margin-top:10px;">
         ${
           user
-            ? 'Your ScoreX account is connected to Firebase.'
+            ? 'Your ScoreX account is connected to Firebase. Matches sync automatically when online.'
             : 'You can continue using ScoreX locally without signing in.'
         }
       </div>
@@ -188,7 +190,7 @@ export function renderSettings() {
 
       <p class="small">
         ScoreX keeps local data available even when you are offline.
-        Cloud match syncing will use Firebase when your account is connected.
+        Cloud match syncing uses Firebase when your account is connected.
       </p>
 
       <button

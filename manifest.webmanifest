@@ -1,6 +1,6 @@
 {
-  "name": "CRICKET1",
-  "short_name": "CRICKET1",
+  "name": "ScoreX",
+  "short_name": "ScoreX",
   "description": "Every Ball. Every Run. Every Moment.",
   "start_url": ".",
   "display": "standalone",
@@ -8,15 +8,15 @@
   "theme_color": "#0f5bd7",
   "icons": [
     {
-      "src": "assets/icons/icon-192.svg",
+      "src": "assets/icons/scorex-icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-512.svg",
+      "src": "assets/icons/scorex-icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

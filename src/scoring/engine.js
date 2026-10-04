@@ -1,5 +1,5 @@
 /**
- * CRICKET1 scoring engine.
+ * ScoreX scoring engine.
  *
  * Source of truth  : `innings.deliveries` (append-only ball-by-ball history).
  * Derived state    : `innings.derived` (score, wickets, batter/bowler stats, partnership,
@@ -71,7 +71,7 @@ export function startInnings(match, battingTeamId, second = false) {
 
 /**
  * Upgrade/repair a match loaded from storage or an import file and (re)compute derived state.
- * Handles records written by CRICKET1 v1 (match-level `current`, cached stats, undo snapshots).
+ * Handles records written by the original ScoreX v1 schema (match-level `current`, cached stats, undo snapshots).
  */
 export function hydrateMatch(match) {
   if (!match || !Array.isArray(match.teams) || !Array.isArray(match.innings)) throw new Error('Invalid match record.');

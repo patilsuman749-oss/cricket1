@@ -9,6 +9,7 @@
  */
 import { serializeMatch } from '../scoring/engine.js';
 import { putRecord } from './db.js';
+import { saveMatchToCloud } from '../services/cloud.js';
 
 const DELAY_MS = 40;
 let pending = null, timer = null, writing = false, dirty = false;
@@ -35,10 +36,12 @@ async function flush() {
       const match = pending;
       if (!match) break;
       await putRecord(serializeMatch(match));
+      // Cloud sync is intentionally fire-and-forget so Firebase latency never blocks scoring.
+      void saveMatchToCloud(match).catch((err) => console.warn('ScoreX cloud sync failed', err));
     } while (dirty);
     setStatus(pending && timer !== null ? 'saving' : 'saved');
   } catch (err) {
-    console.error('CRICKET1 autosave failed', err);
+    console.error('ScoreX autosave failed', err);
     setStatus('error');
   } finally {
     writing = false;
