@@ -37,43 +37,57 @@ async function boot() {
   installLifecycleFlush();
   onSaveStatus(showSaveStatus);
 
-  // Render the application shell immediately. Do NOT block the first paint on IndexedDB.
-  // A slow/locked browser database previously left the page completely blank for several
-  // seconds because boot() awaited getAllRecords() before the first render.
+  // ScoreX is account-first: do not touch match storage until Firebase tells us
+  // that a user is authenticated.
   state.loading = false;
+  state.authReady = false;
   render();
 
-  // Restore saved matches in the background. When storage is ready, refresh the visible
-  // dashboard without delaying the initial UI.
-  try {
-    const records = await getAllRecords();
-    state.matches = records.flatMap((r) => { try { return [Engine.hydrateMatch(r)]; } catch (e) { console.warn('Skipping unreadable match', r?.matchId, e); return []; } });
-    render();
-  } catch (err) {
-    console.error(err);
-    state.storageError = err;
-    render();
-  }
-
-  // Firebase auth state is restored by the browser. Once local storage is ready, merge
-  // this device with the signed-in user's Firestore matches.
   watchAuth(async (user) => {
     state.authUser = user || null;
+    state.authReady = true;
+    state.storageError = null;
     state.cloudSyncStatus = user ? 'syncing' : 'idle';
+
+    if (!user) {
+      // No authenticated user = no access to match data or app navigation.
+      state.matches = [];
+      state.match = null;
+      state.view = 'home';
+      render();
+      return;
+    }
+
     render();
 
-    if (!user) return;
-
     try {
+      // IndexedDB is only an authenticated user's private performance cache.
+      // Clear it when the device is switching between ScoreX accounts.
+      const CACHE_USER_KEY = 'scorex-local-cache-user';
+      const previousUid = localStorage.getItem(CACHE_USER_KEY);
+      if (previousUid && previousUid !== user.uid) await clearMatches();
+      localStorage.setItem(CACHE_USER_KEY, user.uid);
+
+      const records = await getAllRecords();
+      state.matches = records.flatMap((r) => {
+        try { return [Engine.hydrateMatch(r)]; }
+        catch (e) { console.warn('Skipping unreadable match', r?.matchId, e); return []; }
+      });
+      render();
+
       const result = await syncLocalWithCloud(state.matches);
       if (result?.matches) {
         state.matches = result.matches;
-        if (state.match) state.match = state.matches.find((m) => m.matchId === state.match.matchId) || state.match;
+        if (state.match) {
+          state.match = state.matches.find((m) => m.matchId === state.match.matchId) || state.match;
+        }
+        await putRecords(state.matches.map(Engine.serializeMatch));
       }
+
       state.cloudSyncStatus = 'synced';
       render();
     } catch (error) {
-      console.error('ScoreX cloud sync failed', error);
+      console.error('ScoreX startup sync failed', error);
       state.cloudSyncStatus = 'error';
       render();
     }
@@ -84,7 +98,51 @@ async function boot() {
 
 /* ============================================================== rendering */
 
-function render() { renderTopbar(); renderMain(); renderBottomNav(); }
+function render() {
+  if (!state.authReady || !state.authUser) {
+    renderAuthGate();
+    return;
+  }
+  renderTopbar();
+  renderMain();
+  renderBottomNav();
+}
+
+function renderAuthGate() {
+  const topbar = $('#topbar');
+  const main = $('#main-content');
+  const bottom = $('#bottom-nav');
+  if (topbar) topbar.innerHTML = '';
+  if (bottom) bottom.innerHTML = '';
+  document.body.dataset.view = 'auth';
+  if (!main) return;
+
+  if (!state.authReady) {
+    main.innerHTML = `
+      <section class="auth-gate">
+        <div class="auth-card card">
+          <img class="auth-logo" src="assets/icons/scorex-mark.png" alt="ScoreX">
+          <div class="page-kicker">Cricket scoring</div>
+          <h1>Welcome to ScoreX</h1>
+          <p class="subtle">Checking your account…</p>
+          <div class="auth-spinner" aria-hidden="true"></div>
+        </div>
+      </section>`;
+    return;
+  }
+
+  main.innerHTML = `
+    <section class="auth-gate">
+      <div class="auth-card card">
+        <img class="auth-logo" src="assets/icons/scorex-mark.png" alt="ScoreX">
+        <div class="page-kicker">ScoreX</div>
+        <h1>Sign in to continue</h1>
+        <p class="subtle">Sign in with Google to enter ScoreX and keep your matches connected to your account.</p>
+        <button type="button" class="primary-btn auth-google-btn" data-action="sign-in">${icon('users', 18)} Sign in with Google</button>
+        <p class="small auth-note">A Google account is required to use ScoreX.</p>
+      </div>
+    </section>`;
+}
 
 function viewTitle() {
   if (state.view === 'live' && state.match) { const inn = Engine.currentInnings(state.match); return Engine.teamById(state.match, inn.battingTeamId).name; }
@@ -140,6 +198,7 @@ function showUpdateBanner() {
 /* ============================================================== navigation */
 
 function go(view) {
+  if (!state.authUser) { render(); return; }
   if (view === 'live') {
     if (!state.match) {
       const a = activeMatches()[0];
@@ -156,6 +215,7 @@ function go(view) {
 }
 
 function openMatch(id) {
+  if (!state.authUser) { render(); return; }
   const m = state.matches.find((x) => x.matchId === id);
   if (!m) return;
   state.match = m;
@@ -274,15 +334,18 @@ const actions = {
 },
 
 'sign-out': async () => {
-  try {
-    await logout();
-    toast('Signed out of ScoreX.', 'success');
-    render();
-  } catch (e) {
-    console.error(e);
-    toast(e?.message || 'Could not sign out.', 'error');
-  }
-},
+    try {
+      await logout();
+      await clearMatches().catch(() => {});
+      state.matches = [];
+      state.match = null;
+      toast('Signed out of ScoreX.', 'success');
+      render();
+    } catch (e) {
+      console.error(e);
+      toast(e?.message || 'Could not sign out.', 'error');
+    }
+  },
   'reload-app': async () => { await flushNow(); location.reload(); },
   'check-update': async () => {
     const reg = await navigator.serviceWorker?.getRegistration?.();

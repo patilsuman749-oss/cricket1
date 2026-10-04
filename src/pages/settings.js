@@ -28,7 +28,7 @@ export function renderSettings() {
   return `${pageHead(
     'Preferences',
     'Settings',
-    'Appearance, account, feedback and local data.'
+    'Appearance, account and scoring preferences.'
   )}
 
   <div class="grid grid-2">
@@ -99,45 +99,24 @@ export function renderSettings() {
           <h3>ScoreX Account</h3>
 
           <div class="small">
-            ${
-              user
-                ? `Signed in as ${user.email || 'Google account'}`
-                : 'Sign in to sync your matches with the cloud.'
-            }
+            Signed in as ${user?.email || 'Google account'}
           </div>
         </div>
 
-        <span class="chip">
-          ${user ? (syncStatus === 'syncing' ? 'Syncing…' : syncStatus === 'error' ? 'Sync error' : 'Synced') : 'Guest'}
-        </span>
+        <span class="chip">${syncStatus === 'syncing' ? 'Syncing…' : syncStatus === 'error' ? 'Sync error' : 'Synced'}</span>
       </div>
 
       <div class="hero-actions">
-
-        ${
-          user
-            ? `<button
-                type="button"
-                class="secondary-btn"
-                data-action="sign-out">
-                Sign out
-              </button>`
-            : `<button
-                type="button"
-                class="secondary-btn"
-                data-action="sign-in">
-                ${icon('users', 15)} Sign in with Google
-              </button>`
-        }
-
+        <button
+          type="button"
+          class="secondary-btn"
+          data-action="sign-out">
+          Sign out
+        </button>
       </div>
 
       <div class="small" style="margin-top:10px;">
-        ${
-          user
-            ? 'Your ScoreX account is connected to Firebase. Matches sync automatically when online.'
-            : 'You can continue using ScoreX locally without signing in.'
-        }
+        Your ScoreX account is connected to Firebase and is required to access the app.
       </div>
     </div>
 
@@ -175,30 +154,18 @@ export function renderSettings() {
       </div>
     </div>
 
-    <!-- Storage -->
+    <!-- Cloud Storage -->
     <div class="card">
       <div class="card-header">
         <div>
-          <h3>Storage</h3>
-          <div class="small">
-            Local matches are saved in this browser.
-          </div>
+          <h3>Cloud storage</h3>
+          <div class="small">Your match data is linked to your ScoreX account.</div>
         </div>
-
-        <span class="chip">Local</span>
+        <span class="chip">Firebase</span>
       </div>
-
       <p class="small">
-        ScoreX keeps local data available even when you are offline.
-        Cloud match syncing uses Firebase when your account is connected.
+        Match data is saved to your private Firebase account. ScoreX may keep a temporary on-device cache after you sign in so scoring stays fast and resilient.
       </p>
-
-      <button
-        type="button"
-        class="danger-btn"
-        data-action="clear-data">
-        ${icon('trash', 15)} Clear Local Data
-      </button>
     </div>
 
     <!-- App Version -->

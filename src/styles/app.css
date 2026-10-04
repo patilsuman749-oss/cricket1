@@ -488,3 +488,37 @@ html[data-theme="dark"] .brand-mark {
 .account-home-card { min-height: 0; }
 .account-home-card .card-header { align-items: flex-start; }
 
+
+
+/* Auth gate: no app UI is exposed until Google sign-in succeeds. */
+.auth-gate {
+  min-height: calc(100vh - 40px);
+  display: grid;
+  place-items: center;
+  padding: 28px 18px 60px;
+}
+.auth-card {
+  width: min(480px, 100%);
+  text-align: center;
+  padding: 36px 28px;
+}
+.auth-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto 18px;
+}
+.auth-card h1 { margin-top: 4px; }
+.auth-card .subtle { max-width: 380px; margin: 12px auto 22px; }
+.auth-google-btn { min-width: 230px; }
+.auth-note { margin-top: 14px; }
+.auth-spinner {
+  width: 28px;
+  height: 28px;
+  margin: 18px auto 0;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: scorex-spin .8s linear infinite;
+}
+@keyframes scorex-spin { to { transform: rotate(360deg); } }

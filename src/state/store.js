@@ -11,6 +11,7 @@ export const state = {
   scorecardMatchId: null,
   updateReady: false,
   authUser: null,
+  authReady: false,
   cloudSyncStatus: 'idle'
 };
 

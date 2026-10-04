@@ -13,21 +13,22 @@ function continueCard(m) {
 function accountCard() {
   const user = state.authUser;
   const syncing = state.cloudSyncStatus === 'syncing';
-  const status = syncing ? 'Syncing…' : user ? 'Cloud connected' : 'Guest mode';
+  const status = syncing ? 'Syncing…' : 'Cloud connected';
 
   return `<section class="section">
     <div class="card account-home-card">
       <div class="card-header">
         <div>
           <div class="page-kicker">ScoreX account</div>
-          <h3>${user ? 'Your account is connected' : 'Sign in to keep your matches safe'}</h3>
-          <div class="small">${user ? `Signed in as ${escapeHtml(user.email || 'Google account')}. Your matches can sync with Firebase across devices.` : 'Use ScoreX as a guest or sign in with Google to sync your matches with the cloud.'}</div>
+          <h3>Your account is connected</h3>
+          <div class="small">Signed in as ${escapeHtml(user?.email || 'Google account')}. Your matches are linked to your ScoreX cloud account.</div>
         </div>
         <span class="chip">${status}</span>
       </div>
-      ${user
-        ? `<div class="hero-actions"><button type="button" class="secondary-btn" data-action="sign-out">${icon('users', 15)} Sign out</button><button type="button" class="secondary-btn" data-nav="settings">Account settings</button></div>`
-        : `<div class="hero-actions"><button type="button" class="secondary-btn" data-action="sign-in">${icon('users', 15)} Sign in with Google</button><button type="button" class="secondary-btn" data-nav="settings">Why sign in?</button></div>`}
+      <div class="hero-actions">
+        <button type="button" class="secondary-btn" data-action="sign-out">${icon('users', 15)} Sign out</button>
+        <button type="button" class="secondary-btn" data-nav="settings">Account settings</button>
+      </div>
     </div>
   </section>`;
 }
