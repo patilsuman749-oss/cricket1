@@ -4,14 +4,6 @@ import { getTheme } from '../services/theme.js';
 import { auth } from '../services/firebase.js';
 import { state } from '../state/store.js';
 
-const flag = (key) => {
-  try {
-    return localStorage.getItem(key) !== 'off';
-  } catch {
-    return true;
-  }
-};
-
 const version = () => globalThis.CRICKET1_VERSION || 'dev';
 
 export function renderSettings() {
@@ -19,16 +11,10 @@ export function renderSettings() {
   const user = state.authUser || auth.currentUser;
   const syncStatus = state.cloudSyncStatus;
 
-  const toggle = (id, label, on) =>
-    `<label class="live-row setting-row" for="${id}">
-      <span>${label}</span>
-      <input id="${id}" type="checkbox" ${on ? 'checked' : ''}>
-    </label>`;
-
   return `${pageHead(
     'Preferences',
     'Settings',
-    'Appearance, account and scoring preferences.'
+    'Appearance, account and app preferences.'
   )}
 
   <div class="grid grid-2">
@@ -62,42 +48,11 @@ export function renderSettings() {
       </div>
     </div>
 
-    <!-- Scoring Feedback -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <h3>Scoring feedback</h3>
-          <div class="small">Small sound and vibration cues.</div>
-        </div>
-      </div>
-
-      <div class="grid">
-        ${toggle(
-          'setting-sound',
-          'Sound effects',
-          flag('cricket1-sound')
-        )}
-
-        ${toggle(
-          'setting-vibration',
-          'Vibration',
-          flag('cricket1-vibration')
-        )}
-
-        ${toggle(
-          'setting-celebrations',
-          'Milestone animation',
-          flag('cricket1-celebrations')
-        )}
-      </div>
-    </div>
-
     <!-- ScoreX Account -->
     <div class="card">
       <div class="card-header">
         <div>
           <h3>ScoreX Account</h3>
-
           <div class="small">
             Signed in as ${user?.email || 'Google account'}
           </div>
@@ -117,40 +72,6 @@ export function renderSettings() {
 
       <div class="small" style="margin-top:10px;">
         Your ScoreX account is connected to Firebase and is required to access the app.
-      </div>
-    </div>
-
-    <!-- Data Backup -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <h3>Data backup</h3>
-          <div class="small">
-            Export every match or restore a JSON backup.
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-actions">
-        <button
-          type="button"
-          class="secondary-btn"
-          data-action="export">
-          ${icon('download', 15)} Export JSON
-        </button>
-
-        <button
-          type="button"
-          class="secondary-btn"
-          data-action="import">
-          Import JSON
-        </button>
-
-        <input
-          id="import-file"
-          type="file"
-          accept="application/json,.json"
-          hidden>
       </div>
     </div>
 

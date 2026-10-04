@@ -1,6 +1,5 @@
 import { launch, ROOT } from './launch.mjs';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 const BASE = 'http://localhost:4173/';
 const results = [];
 const check = async (name, fn) => { try { await fn(); results.push(['PASS', name]); console.log('PASS', name); } catch (e) { results.push(['FAIL', name, e.message]); console.log('FAIL', name, '\n   ', e.message.split('\n').slice(0, 3).join('\n    ')); } };
@@ -140,23 +139,18 @@ await check('chase finishes: result shown, scoring blocked, saved to history', a
   await tap('[data-action="view-scorecard"]');
   const sc = await $t('#main-content'); assert.match(sc, /Lions — 15\/0/); assert.match(sc, /Tigers — 16\/0/); assert.match(sc, /Did not bat/);
 });
-await check('statistics & players pages render from completed match', async () => {
-  await tap('[data-nav="stats"]'); assert.match(await $t('#main-content'), /Top Run Scorer/);
-  await tap('[data-nav="players"]'); assert.match(await $t('#main-content'), /A1|B1/);
-});
-await check('export JSON → import JSON round trip', async () => {
-  const exported = await page.evaluate(async () => new Promise((res, rej) => { const r = indexedDB.open('cricket1-db'); r.onsuccess = () => { const q = r.result.transaction('matches').objectStore('matches').getAll(); q.onsuccess = () => res({ app: 'CRICKET1', matches: q.result }); }; }));
-  assert.equal(exported.matches.length, 1);
-  fs.writeFileSync('/tmp/backup.json', JSON.stringify(exported));
-  await tap('[data-nav="settings"]'); await tap('[data-action="clear-data"]'); await settle(200);
-  assert.equal((await dbRead()).length, 0);
-  const input = await page.$('#import-file'); await input.uploadFile('/tmp/backup.json'); await settle(400);
-  assert.equal((await dbRead()).length, 1);
-  await tap('[data-nav="history"]'); assert.match(await $t('.history-card'), /Tigers won by 2 wickets/);
+await check('match history shows player stats from the completed match', async () => {
+  await tap('[data-nav="history"]');
+  assert.match(await $t('.history-card'), /Player stats/);
+  await tap('.history-player-stats > summary');
+  const history = await $t('.history-player-stats');
+  assert.match(history, /A1/);
+  assert.match(history, /B1/);
+  assert.match(history, /R \(B\)/);
 });
 
 await check('theme: toggle works instantly, persists across refresh, on every page', async () => {
-  for (const view of ['home', 'history', 'players', 'stats', 'settings']) {
+  for (const view of ['home', 'history', 'settings']) {
     await tap(`[data-nav="${view}"]`);
     const before = await page.evaluate(() => document.documentElement.dataset.theme);
     await tap('[data-action="theme"]');
@@ -198,7 +192,7 @@ for (const w of [360, 375, 390, 412, 430]) {
     const mr = await page.evaluate(() => { const m = document.querySelector('.modal').getBoundingClientRect(); return { w: m.width, l: m.left, r: m.right, vw: innerWidth, ov: document.documentElement.scrollWidth - innerWidth }; });
     assert.ok(mr.l >= 0 && mr.r <= mr.vw && mr.ov === 0, JSON.stringify(mr));
     await tap('[data-action="close-modal"]');
-    for (const view of ['home', 'history', 'players', 'stats', 'settings']) { await tap(`[data-nav="${view}"]`); r = await probe(); assert.equal(r.overflow, 0, view + ' overflow ' + r.overflow); assert.deepEqual(r.overlaps, [], view); }
+    for (const view of ['home', 'history', 'settings']) { await tap(`[data-nav="${view}"]`); r = await probe(); assert.equal(r.overflow, 0, view + ' overflow ' + r.overflow); assert.deepEqual(r.overlaps, [], view); }
     await tap('[data-nav="live"]');
   });
 }

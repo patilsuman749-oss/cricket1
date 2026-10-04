@@ -76,12 +76,11 @@ src/
   state/store.js         app state
   scoring/engine.js      pure scoring engine (history = truth, derived stats)
   scoring/calculations.js scorecard / partnership helpers
-  statistics/aggregate.js player career stats from completed matches
   storage/db.js          IndexedDB (single shared connection)
   storage/saveQueue.js   coalescing, non-blocking autosave + status
-  services/              feedback (sound/vibration), theme, share/export, SW updates
+  services/              theme, share, cloud/auth, SW updates
   pages/                 setup-validation.js, setup.js, live.js, live-modals.js,
-                         home, history, players, stats, settings, scorecard, result
+                         home, history, settings, scorecard, result
   components/            ui.js (toast, modal, focus trap), icons.js
   styles/app.css         design system (light + dark, mobile-first)
   data/ utils/           constants, helpers
@@ -89,8 +88,8 @@ tests/                   unit tests (*.test.mjs) and tests/e2e (real browser)
 scripts/syntax-check.mjs
 ```
 
-## Data & backup
-Matches are stored as **delivery history + minimal state** (no derived numbers). **Settings → Export JSON** writes `{app, schemaVersion, matches[]}`; **Import JSON** also accepts the older v1 array format and upgrades records on load. Clearing site data deletes matches — export first.
+## Data storage
+Matches are stored as **delivery history + minimal state** (no derived numbers). Derived player and score statistics are rebuilt when a match is loaded, so Match History can show the batting and bowling performance from every completed match without storing duplicate statistics.
 
 ## Not in this version (by design)
 No cloud, Google login, live spectators, leaderboards or tournaments — nothing is faked. The match record has a unique `matchId` and `cloud` marker, storage and services are isolated, and derived state is recomputable, so a Firebase sync layer, auth and an Android WebView/TWA wrapper can be added without touching the scoring engine.

@@ -19,12 +19,11 @@ const CORE = [
   './src/data/defaults.js', './src/utils/helpers.js',
   './src/state/store.js',
   './src/scoring/engine.js', './src/scoring/calculations.js',
-  './src/statistics/aggregate.js',
   './src/storage/db.js', './src/storage/saveQueue.js',
   './src/services/feedback.js', './src/services/share.js', './src/services/theme.js', './src/services/updates.js',
   './src/services/firebase.js', './src/services/auth.js', './src/services/cloud.js',
   './src/pages/setup-validation.js', './src/pages/setup.js', './src/pages/home.js', './src/pages/live.js', './src/pages/live-modals.js',
-  './src/pages/history.js', './src/pages/players.js', './src/pages/stats.js', './src/pages/settings.js', './src/pages/scorecard.js', './src/pages/result.js',
+  './src/pages/history.js', './src/pages/settings.js', './src/pages/scorecard.js', './src/pages/result.js',
   './assets/icons/scorex-mark.png', './assets/icons/scorex-icon-192.png', './assets/icons/scorex-icon-512.png'
 ];
 

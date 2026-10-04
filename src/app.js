@@ -14,20 +14,18 @@ import { renderHome } from './pages/home.js';
 import { renderLive, bindLive, updateLive, showSaveStatus, blockedAction } from './pages/live.js';
 import * as Modals from './pages/live-modals.js';
 import { renderHistory } from './pages/history.js';
-import { renderPlayers } from './pages/players.js';
-import { renderStats } from './pages/stats.js';
 import { renderSettings } from './pages/settings.js';
 import { renderScorecardPage } from './pages/scorecard.js';
 import { renderResult } from './pages/result.js';
 import { toast, clearToasts, closeModal, isModalOpen, trapFocus } from './components/ui.js';
 import { getAllRecords, putRecord, putRecords, deleteMatch, clearMatches } from './storage/db.js';
 import { enqueue, flushNow, onSaveStatus, installLifecycleFlush } from './storage/saveQueue.js';
-import { shareMatch, downloadJson, downloadScorecardHtml } from './services/share.js';
+import { shareMatch, downloadScorecardHtml } from './services/share.js';
 import { vibrate, playFeedback, celebrate, primeAudio } from './services/feedback.js';
 import { applyTheme, getTheme, setTheme, toggleTheme } from './services/theme.js';
 import { registerServiceWorker } from './services/updates.js';
 
-const NAV = [['home', 'Home', 'home'], ['live', 'Live', 'play'], ['history', 'History', 'history'], ['players', 'Players', 'users'], ['stats', 'Stats', 'chart'], ['settings', 'Settings', 'settings']];
+const NAV = [['home', 'Home', 'home'], ['live', 'Live', 'play'], ['history', 'History', 'history'], ['settings', 'Settings', 'settings']];
 
 /* ================================================================== boot */
 
@@ -170,8 +168,6 @@ function renderMain() {
     case 'new-match': root.innerHTML = renderSetup(); break;
     case 'live': renderLiveView(root); break;
     case 'history': root.innerHTML = renderHistory(); break;
-    case 'players': root.innerHTML = renderPlayers(); break;
-    case 'stats': root.innerHTML = renderStats(); break;
     case 'settings': root.innerHTML = renderSettings(); break;
     case 'scorecard': root.innerHTML = renderScorecardPage(); break;
     default: root.innerHTML = renderHome();
@@ -423,37 +419,10 @@ const actions = {
     if (state.match?.matchId === id) state.match = null;
     render(); toast('Match deleted.', 'success');
   },
-  export: async () => { await flushNow(); downloadJson({ app: 'ScoreX', schemaVersion: Engine.SCHEMA_VERSION, exportedAt: new Date().toISOString(), matches: state.matches.map(Engine.serializeMatch) }); toast('Backup exported.', 'success'); },
-  import: () => $('#import-file').click(),
-  'clear-data': async () => {
-    if (!confirm('Delete ALL ScoreX matches from this device? Export a backup first if you need one.')) return;
-    await clearMatches(); state.matches = []; state.match = null; render(); toast('Local data cleared.', 'success');
-  },
   'close-modal': () => closeModal(),
   'modal-backdrop': (_btn, ev) => { if (ev.target === _btn) closeModal(); }
 };
 
-async function importFile(file) {
-  try {
-    const data = JSON.parse(await file.text());
-    const list = Array.isArray(data) ? data : data?.matches;
-    if (!Array.isArray(list)) throw new Error('This file does not contain ScoreX matches.');
-    const good = [];
-    for (const raw of list) { try { good.push(Engine.hydrateMatch(structuredClone(raw))); } catch { /* counted below */ } }
-    if (!good.length) throw new Error('No valid matches found in this file.');
-    await putRecords(good.map(Engine.serializeMatch));
-    good.forEach(upsertMatch);
-    void syncLocalWithCloud(state.matches).then((r) => {
-      if (r?.matches) {
-        state.matches = r.matches;
-        if (state.match) state.match = state.matches.find((m) => m.matchId === state.match.matchId) || state.match;
-      }
-      if (state.view === 'settings') renderMain();
-    }).catch((e) => console.warn('ScoreX cloud import sync failed', e));
-    if (state.view === 'settings') renderMain();
-    toast(`${good.length} match${good.length === 1 ? '' : 'es'} imported${good.length < list.length ? `, ${list.length - good.length} skipped` : ''}.`, 'success');
-  } catch (e) { toast(`Import failed: ${e.message}`, 'error'); }
-}
 
 /* ============================================================= listeners */
 
@@ -498,10 +467,6 @@ function installListeners() {
   document.addEventListener('change', (ev) => {
     const el = ev.target;
     if (el.id === 'dismissal-type') Modals.syncWicketForm();
-    else if (el.id === 'setting-sound') localStorage.setItem('cricket1-sound', el.checked ? 'on' : 'off');
-    else if (el.id === 'setting-vibration') localStorage.setItem('cricket1-vibration', el.checked ? 'on' : 'off');
-    else if (el.id === 'setting-celebrations') localStorage.setItem('cricket1-celebrations', el.checked ? 'on' : 'off');
-    else if (el.id === 'import-file' && el.files?.[0]) { importFile(el.files[0]); el.value = ''; }
   });
 
   document.addEventListener('keydown', (ev) => {

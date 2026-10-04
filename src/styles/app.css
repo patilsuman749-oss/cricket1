@@ -227,9 +227,22 @@ tr:last-child td { border-bottom:0; }
 .result-main { margin:9px 0 6px; font-size:clamp(27px,4vw,43px); font-weight:800; }
 .result-meta { color:var(--text-secondary); }
 
-.history-card { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.history-card { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+.history-summary { min-width:0; flex:1 1 340px; }
 .history-score { font-weight:800; font-size:18px; }
-.history-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.history-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
+.history-player-stats { flex:1 1 100%; width:100%; margin-top:4px; border:1px solid var(--border-color); border-radius:14px; background:var(--very-light-blue); overflow:hidden; }
+.history-player-stats > summary { cursor:pointer; list-style:none; display:inline-flex; align-items:center; gap:7px; padding:10px 12px; color:var(--primary-blue); font-weight:800; font-size:12px; user-select:none; }
+.history-player-stats > summary::-webkit-details-marker { display:none; }
+.history-stats-body { padding:0 12px 12px; }
+.history-stats-note { margin-bottom:10px; }
+.history-stats-team { font-size:12px; font-weight:800; margin:10px 0 6px; }
+.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.history-player-table { width:100%; min-width:720px; border-collapse:collapse; font-size:11px; }
+.history-player-table th, .history-player-table td { padding:8px 9px; text-align:right; border-bottom:1px solid var(--border-color); white-space:nowrap; }
+.history-player-table th:first-child, .history-player-table td:first-child { text-align:left; }
+.history-player-table thead th { color:var(--text-secondary); font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+.history-player-table tbody tr:last-child td { border-bottom:0; }
 
 .player-profile { display:flex; align-items:center; gap:12px; }
 .avatar { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; color:var(--primary-blue); background:var(--light-blue); font-weight:800; }
@@ -288,8 +301,8 @@ tr:last-child td { border-bottom:0; }
   .score-button { min-height:66px; }
   .score-button.extra { min-height:60px; }
   .choice-grid { grid-template-columns:1fr; }
-  .history-card { align-items:flex-start; flex-direction:column; }
-  .history-actions { justify-content:flex-start; }
+  .history-card { flex-direction:column; }
+  .history-actions { width:100%; justify-content:flex-start; }
   table { min-width:560px; }
 }
 @media (max-width: 390px) {
