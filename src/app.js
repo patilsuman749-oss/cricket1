@@ -236,6 +236,27 @@ function newMatch() {
 
 const actions = {
   theme: () => { toggleTheme(); renderTopbar(); if (state.view === 'settings') renderMain(); },
+  'sign-in': async () => {
+  try {
+    await signInWithGoogle();
+    toast('Signed in with Google.', 'success');
+    render();
+  } catch (e) {
+    console.error(e);
+    toast(e?.message || 'Google sign-in failed.', 'error');
+  }
+},
+
+'sign-out': async () => {
+  try {
+    await logout();
+    toast('Signed out.', 'success');
+    render();
+  } catch (e) {
+    console.error(e);
+    toast(e?.message || 'Could not sign out.', 'error');
+  }
+},
   'reload-app': async () => { await flushNow(); location.reload(); },
   'check-update': async () => {
     const reg = await navigator.serviceWorker?.getRegistration?.();
