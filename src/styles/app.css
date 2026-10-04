@@ -484,3 +484,7 @@ input, select { font-size:16px; height:48px; }
 html[data-theme="dark"] .brand-mark {
   filter: invert(1);
 }
+/* ScoreX homepage account card */
+.account-home-card { min-height: 0; }
+.account-home-card .card-header { align-items: flex-start; }
+
