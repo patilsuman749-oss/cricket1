@@ -231,18 +231,6 @@ tr:last-child td { border-bottom:0; }
 .history-summary { min-width:0; flex:1 1 340px; }
 .history-score { font-weight:800; font-size:18px; }
 .history-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:flex-start; }
-.history-player-stats { flex:1 1 100%; width:100%; margin-top:4px; border:1px solid var(--border-color); border-radius:14px; background:var(--very-light-blue); overflow:hidden; }
-.history-player-stats > summary { cursor:pointer; list-style:none; display:inline-flex; align-items:center; gap:7px; padding:10px 12px; color:var(--primary-blue); font-weight:800; font-size:12px; user-select:none; }
-.history-player-stats > summary::-webkit-details-marker { display:none; }
-.history-stats-body { padding:0 12px 12px; }
-.history-stats-note { margin-bottom:10px; }
-.history-stats-team { font-size:12px; font-weight:800; margin:10px 0 6px; }
-.table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.history-player-table { width:100%; min-width:720px; border-collapse:collapse; font-size:11px; }
-.history-player-table th, .history-player-table td { padding:8px 9px; text-align:right; border-bottom:1px solid var(--border-color); white-space:nowrap; }
-.history-player-table th:first-child, .history-player-table td:first-child { text-align:left; }
-.history-player-table thead th { color:var(--text-secondary); font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
-.history-player-table tbody tr:last-child td { border-bottom:0; }
 
 .player-profile { display:flex; align-items:center; gap:12px; }
 .avatar { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; color:var(--primary-blue); background:var(--light-blue); font-weight:800; }
@@ -290,9 +278,13 @@ tr:last-child td { border-bottom:0; }
   .score-stats { grid-template-columns:repeat(4,minmax(0,1fr)); }
 }
 @media (max-width: 620px) {
-  .topbar { padding:0 12px; }
+  :root { --topbar-h:64px; }
+  .topbar { height:64px; padding:0 12px; gap:10px; }
   .brand-tag { display:none; }
-  .main-content { padding:18px 12px calc(100px + var(--safe-bottom)); }
+  .brand-mark { width:32px; height:32px; }
+  .brand-name { font-size:15px; }
+  .topbar-actions .icon-btn { width:42px; min-height:42px; }
+  .main-content { padding:14px 10px calc(96px + var(--safe-bottom)); }
   .grid-2, .grid-3, .grid-4, .form-grid { grid-template-columns:1fr; }
   .form-field.full { grid-column:auto; }
   .page-head { align-items:flex-start; flex-direction:column; }
@@ -303,7 +295,31 @@ tr:last-child td { border-bottom:0; }
   .choice-grid { grid-template-columns:1fr; }
   .history-card { flex-direction:column; }
   .history-actions { width:100%; justify-content:flex-start; }
+  .history-actions > button { min-height:42px; padding:0 11px; font-size:12px; }
   table { min-width:560px; }
+
+  /* Compact home hero for phone screens. */
+  .hero {
+    grid-template-columns:1fr;
+    gap:14px;
+    padding:18px 16px 16px;
+    border-radius:20px;
+  }
+  .hero-title {
+    font-size:30px;
+    line-height:1.08;
+    margin:6px 0 10px;
+  }
+  .hero-copy > .subtle {
+    font-size:14px;
+    line-height:1.45;
+    margin:0;
+  }
+  .hero-actions { margin-top:16px; }
+  .hero-actions .primary-btn { min-height:44px; padding:0 14px; }
+  .sample-score { padding:15px 16px; border-radius:18px; }
+  .sample-score-num { font-size:42px; line-height:1; }
+  .sample-micro { margin-top:9px; font-size:11px; }
 }
 @media (max-width: 390px) {
   .bottom-nav { padding-left:2px; padding-right:2px; }
