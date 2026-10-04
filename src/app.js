@@ -2,6 +2,7 @@
  * CRICKET1 application shell: boot, routing, and ONE set of delegated event listeners
  * (registered exactly once in `installListeners`). Every control maps to exactly one handler below.
  */
+import { auth, db, googleProvider } from './services/firebase.js';
 import { icon } from './components/icons.js';
 import { $, escapeHtml } from './utils/helpers.js';
 import { state, upsertMatch, activeMatches } from './state/store.js';
